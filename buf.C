@@ -62,7 +62,18 @@ BufMgr::~BufMgr() {
     delete [] bufPool;
 }
 
-
+/* Function named allocBuf.
+*  Input: frame -> an integer reference
+*  Output: 'status' object
+*   - BUFFEREXCEEDED if all buffer frames are pinned
+*   - UNIXERR if the call to I/O returned an error
+*   - OK else
+*
+*  Directions:
+*    - Allocates a free frame using the clock algorithm
+*    - Writes dirty page to disk
+*    - If we remove a valid page, then remove it from hash table 
+*/
 const Status BufMgr::allocBuf(int & frame) 
 {
 
