@@ -63,25 +63,27 @@ BufMgr::~BufMgr() {
 }
 
 /* Function named allocBuf.
-*  Input: frame -> an integer reference
+*  Input: frame -> an integer reference. changes to frame will be kept
 *  Output: 'status' object
 *   - BUFFEREXCEEDED if all buffer frames are pinned
 *   - UNIXERR if the call to I/O returned an error
 *   - OK else
-*
+*  Used By: readPage() and allocPage()
 *  Directions:
-*    - Allocates a free frame using the clock algorithm
+*    - find and allocate a free frame using clock
 *    - Writes dirty page to disk
 *    - If we remove a valid page, then remove it from hash table 
 */
 const Status BufMgr::allocBuf(int & frame) 
 {
+// if dirty, write page to disk
 
+// if page was valid, change hash table
 
+// change frame value as needed
 
-
-
-
+// FIXME: my main questions is what a frame 
+references and how to loop through frames
 }
 
 	
