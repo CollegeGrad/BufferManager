@@ -76,21 +76,59 @@ BufMgr::~BufMgr() {
 */
 const Status BufMgr::allocBuf(int & frame) 
 {
-// if dirty, write page to disk
-
-// if page was valid, change hash table
-
-// change frame value as needed
-
-// FIXME: my main questions is what a frame 
-references and how to loop through frames
+    Status status;
+    int count = 0;
+    //TODO Case: if all buffer frames are pinned, maybe loop through the clock twice, 
+    //           return BUFFEREXCEEDED if out of loop. Or use a bool
+    while (true){
+        count += 1;
+        //return BUFFEREXCEEDED if all frams are pinned
+        if(count >= numBufs*2){
+            status = BUFFEREXCEEDED;
+            break;
+        }
+        //advance clock
+        advanceClock();
+        //check if it is a valid set
+        if(!bufTable[clockHand].valid){
+            break;
+        }
+        //check if the frame is pinned
+        if(bufTable[clockHand].pinCnt != 0){
+            continue;
+        }
+        //check if recently used
+        if(bufTable[clockHand].refbit){
+            //clear the reference bit 
+            bufTable[clockHand].refbit = false;
+            continue;
+        }
+        //it is avaliable
+        //check if dirty
+        if(bufTable[clockHand].dirty){
+            //if dirty, write back to disk
+            status = bufTable[clockHand].file->writePage(bufTable[clockHand].pageNo,&(bufPool[clockHand]));
+            //UNIXERR if the call to the I/O layer returned an error
+            if (status != OK){
+                status = UNIXERR;
+            }
+        }
+        //remove the page
+        hashTable->remove(bufTable[clockHand].file,bufTable[clockHand].pageNo);
+        bufTable[clockHand].Clear();
+        status = OK;
+        break;
+    }
+    return status;
 }
 
-	
 const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
 {
-
-
+    // Check whether the page is already in the buffer pool
+    Status status = OK;
+    int frameNo = 0;
+    bool isInBufferPool = hashTable->lookup(file, PageNo, frameNo);
+    // Case 1, Page is not in the buffer pool
 
 
 
