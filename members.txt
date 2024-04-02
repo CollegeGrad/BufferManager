@@ -1,0 +1,2 @@
+Narisen Lyu: He worked on readPage, allocBuf, and allocPage
+Nixie Koch: worked on allocBuf, unPinPage, and readPage
