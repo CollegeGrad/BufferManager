@@ -78,7 +78,7 @@ const Status BufMgr::allocBuf(int & frame)
 {
     Status status = OK;
     int count = 0;
-    //TODO Case: if all buffer frames are pinned, maybe loop through the clock twice, 
+    // TODO Case: if all buffer frames are pinned, maybe loop through the clock twice, 
     //           return BUFFEREXCEEDED if out of loop. Or use a bool
     while (true){
         count += 1;
@@ -179,16 +179,40 @@ const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
     return status;
 }
 
+/**
+ * Decrements the pinCnt of the frame containing (file, PageNo) and, if dirty == true, 
+ * sets the dirty bit.  Returns OK if no errors occurred, 
+ * @param file A pointer to the file that contains the page
+ * @param PageNo the page number of the desired page within the file
+ * @param dirty says wheter the file will be written or not
+ * @return Status:
+ *              - OK if no errors occurred
+ *              - HASHNOTFOUND if the page is not in the buffer pool hash table,
+ *              - PAGENOTPINNED if the pin count is already 0.
+ */
+const Status BufMgr::unPinPage(File* file, const int PageNo, const bool dirty){
+    Status status;
+    int frameNo; // frame number of page in the buffer pool
+    status = hashTable->lookup(file, PageNo, frameNo);
 
-const Status BufMgr::unPinPage(File* file, const int PageNo, 
-			       const bool dirty) 
-{
+    if (status == HASHNOTFOUND){
+        return status;
+    }
+
+    if (bufTable[frameNo].pinCnt == 0){
+        return PAGENOTPINNED;
+    }
+
+    if (dirty){
+        bufTable[frameNo].dirty = true;
+    }
+
+    bufTable[frameNo].pinCnt -= 1;
+    return OK;
+
+} 
 
 
-
-
-
-}
 
 const Status BufMgr::allocPage(File* file, int& pageNo, Page*& page) 
 {
