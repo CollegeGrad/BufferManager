@@ -1,3 +1,10 @@
+/**
+ * @file buf.C
+ *
+ * @author Nixie Koch, nkkoch@wisc.edu
+ * @author Narisen Lyu, nlyu3@wisc.edu
+ */
+
 #include <memory.h>
 #include <unistd.h>
 #include <errno.h>
