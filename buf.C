@@ -121,6 +121,7 @@ const Status BufMgr::allocBuf(int & frame)
     }
     //return the free frame via the frame parameter
     frame = clockHand;
+    //return the status
     return status;
 }
 
@@ -129,7 +130,7 @@ const Status BufMgr::allocBuf(int & frame)
  * disk if it's not already present by allocating a new buffer
  * frame using allocBuf.
  * @param file A pointer to the file that contains the page
- * @param PageNo the page number of the desired page within the file
+ * @param PageNo The page number of the desired page within the file
  * @param page A reference to a pointer to a Page object
  * @return Status:
  *              - OK if no errors occurred
@@ -176,6 +177,7 @@ const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
         //Return a pointer to the frame containing the page via the page parameter
         page = &bufPool[frame];
     }
+    //return the status
     return status;
 }
 
@@ -190,15 +192,45 @@ const Status BufMgr::unPinPage(File* file, const int PageNo,
 
 }
 
+/**
+ * Allocates a new page in the specified file.
+ * @param file A pointer to the file where the new page will be added
+ * @param pageNo An integer that will be updated with the number of the newly allocated page
+ * @param page A reference to a pointer to a Page object
+ * @return Status:
+ *              - OK if no errors occurred
+ *              - UNIXERR if a Unix error occurred
+ *              - BUFFEREXCEEDED if all buffer frames are pinned
+ *              - HASHTBLERROR if a hash table error occurred
+ *          The page number of the newly allocated page to the caller via the pageNo parameter
+ *          A pointer to the buffer frame allocated for the page via the page parameter
+*/
 const Status BufMgr::allocPage(File* file, int& pageNo, Page*& page) 
 {
-
-
-
-
-
-
-
+    Status status = OK;
+    int frame;
+    //allocate an empty page in the specified file by invoking the file->allocatePage() method
+    //also returns the page number of the newly allocated page to the caller via the pageNo parameter
+    status = file->allocatePage(pageNo);
+    if(status != OK){
+        return status;
+    }
+    //Then allocBuf() is called to obtain a buffer pool frame
+    status = allocBuf(frame);
+    if(status != OK){
+        return status;
+    }
+    //an entry is inserted into the hash table
+    status = hashTable->insert(file, pageNo, frame);
+    if(status != OK){
+        return status;
+    }
+    //and Set() is invoked on the frame to set it up properly
+    bufTable[frame].Set(file, pageNo);
+    //a pointer to the buffer frame allocated for the page via the page parameter
+    page = &bufPool[frame];
+    //return the status
+    return status;
 }
 
 const Status BufMgr::disposePage(File* file, const int pageNo) 
