@@ -177,7 +177,6 @@ const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
         }
         //insert the page into the hashtable
         status = hashTable->insert(file,PageNo,frame);
-        printf("test");
         if(status != OK){
             return status;
         }
