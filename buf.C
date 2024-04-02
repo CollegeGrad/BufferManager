@@ -92,7 +92,7 @@ const Status BufMgr::allocBuf(int & frame)
         //return BUFFEREXCEEDED if all frames are pinned
         if(count >= numBufs*2){
             status = BUFFEREXCEEDED;
-            break;
+            return status;
         }
         //advance clock
         advanceClock();
@@ -118,6 +118,7 @@ const Status BufMgr::allocBuf(int & frame)
             //UNIXERR if the call to the I/O layer returned an error
             if (status != OK){
                 status = UNIXERR;
+                return status;
             }
         }
         //remove the page
@@ -154,7 +155,8 @@ const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
     // Returns HASHNOTFOUND if entry is not found and OK otherwise
     Status lookupStatus = hashTable->lookup(file, PageNo, frame);
     // Case 1: Page is in the buffer pool
-    if(lookupStatus=OK){
+    if(lookupStatus==OK){
+        printf("Status1: %d\n", static_cast<int>(lookupStatus));
         //set the appropriate refbit
         bufTable[frame].refbit = true;
         //increment the pinCnt for the page
@@ -164,19 +166,26 @@ const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
     } 
     // Case 2: Page is not in the buffer pool
     else{
+        printf("Status in ELSE: %d\n", static_cast<int>(status));
+        printf("lookupStatus: %d\n", static_cast<int>(lookupStatus));
         //Call allocBuf() to allocate a buffer frame
         status = allocBuf(frame);
         if(status != OK){
+            printf("Status2: %d\n", static_cast<int>(status));
             return status;
         }
         //call the method file->readPage() to read the page from disk into the buffer pool frame
         file->readPage(PageNo,&bufPool[frame]);
         if(status != OK){
+            printf("Status3: %d\n", static_cast<int>(status));
             return status;
         }
         //insert the page into the hashtable
         status = hashTable->insert(file,PageNo,frame);
+        printf("test");
         if(status != OK){
+            printf("Status4: %d\n", static_cast<int>(status));
+            //printf((char*)status);
             return status;
         }
         //invoke Set() on the frame to set it up properly
@@ -185,6 +194,7 @@ const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
         page = &bufPool[frame];
     }
     //return the status
+    printf("Status5: %d\n", static_cast<int>(status));
     return status;
 }
 
